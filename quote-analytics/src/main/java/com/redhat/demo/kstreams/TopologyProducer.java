@@ -12,9 +12,7 @@ import org.apache.kafka.streams.kstream.Materialized;
 import org.apache.kafka.streams.kstream.Produced;
 import org.apache.kafka.streams.kstream.TimeWindows;
 
-import com.redhat.demo.kstreams.model.Quote;
 import com.redhat.demo.kstreams.model.QuoteAggregate;
-import com.redhat.demo.kstreams.model.QuoteAggregateSerde;
 
 import io.quarkus.kafka.client.serialization.ObjectMapperSerde;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -27,27 +25,27 @@ public class TopologyProducer {
     public Topology buildTopology() {
         StreamsBuilder builder = new StreamsBuilder();
 
-        var quoteSerde = new ObjectMapperSerde<>(Quote.class);
-        var quoteAggregateSerde = new ObjectMapperSerde<>(QuoteAggregate.class);
+        var quoteAggregateSerdeJson = new ObjectMapperSerde<>(QuoteAggregate.class);
 
-        KStream<String, Quote> quoteStream = builder.stream("quotes",
-                Consumed.with(Serdes.String(), quoteSerde));
+        KStream<String, Integer> quoteStream = builder.stream("quotes",
+                Consumed.with(Serdes.String(), Serdes.Integer()));
 
         quoteStream
+                .selectKey((k,v) -> "-")
                 .groupByKey()
                 .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(6)))
                 .aggregate(
                         QuoteAggregate::new,
-                        (k, quote, aggregator) -> {
-                            aggregator.addPrice(quote.price);
-                            return aggregator;
+                        (k, price, aggregate) -> {
+                            aggregate.addPrice(price);
+                            return aggregate;
                         },
-                        Materialized.with(Serdes.String(), new QuoteAggregateSerde()))
+                        Materialized.with(Serdes.String(), quoteAggregateSerdeJson))
                 .toStream()
                 .map((key, aggregate) -> {
-                    return new KeyValue<>("quoteAggregate", aggregate);
+                     return new KeyValue<>("quoteAggregate", aggregate);
                 })
-                .to("quote-aggregates", Produced.with(Serdes.String(), quoteAggregateSerde));
+                .to("quote-aggregates", Produced.with(Serdes.String(), quoteAggregateSerdeJson));
 
         var topology = builder.build();
 

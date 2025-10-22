@@ -1,4 +1,4 @@
-package org.acme.amqp.model;
+package org.acme.model;
 
 public class QuoteAggregate {
     private double sum;

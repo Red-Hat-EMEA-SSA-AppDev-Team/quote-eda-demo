@@ -27,7 +27,7 @@ public class QuoteAggregate {
         this.count++;
     }
 
-    public void addPrice(int price) {
+    public void addPrice(Integer price) {
         this.sum += price;
         this.count++;
     }

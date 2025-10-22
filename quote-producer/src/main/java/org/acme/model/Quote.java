@@ -1,4 +1,4 @@
-package org.acme.amqp.model;
+package org.acme.model;
 
 import io.quarkus.runtime.annotations.RegisterForReflection;
 

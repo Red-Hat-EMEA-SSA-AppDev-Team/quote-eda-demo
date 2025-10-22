@@ -1,18 +1,19 @@
-package org.acme.amqp.processor;
+package org.acme.processor;
 
 import java.util.Random;
 
-import org.acme.amqp.model.Quote;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.eclipse.microprofile.reactive.messaging.Incoming;
 import org.eclipse.microprofile.reactive.messaging.Outgoing;
 import org.jboss.logging.Logger;
 
 import io.smallrye.reactive.messaging.annotations.Blocking;
+import io.smallrye.reactive.messaging.kafka.Record;
 import jakarta.enterprise.context.ApplicationScoped;
 
 /**
- * A bean consuming data from the "request" AMQP queue and giving out a random quote.
- * The result is pushed to the "quotes" AMQP queue.
+ * A bean consuming data from the "request" and giving out a random quote.
+ * The result is pushed to the "quotes".
  */
 @ApplicationScoped
 public class QuoteProcessor {
@@ -23,10 +24,10 @@ public class QuoteProcessor {
     @Incoming("requests")       // quotes-requests
     @Outgoing("quotes")         // quotes
     @Blocking(ordered = false)  // blocking method
-    public Quote process(String quoteRequest) throws InterruptedException {
+    public Record<String, Integer> process(ConsumerRecord<String, String> record) throws InterruptedException {
         LOG.info("quote serving");
         // simulate some hard working task
         Thread.sleep(200+random.nextInt(10)*200);
-        return new Quote(quoteRequest, random.nextInt(100));
+        return Record.of(record.key(), random.nextInt(100));
     }
 }
