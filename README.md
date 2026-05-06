@@ -57,6 +57,11 @@ The `-Dquarkus.native.container-build=true` instructs Quarkus to build Linux 64b
 
 ### Openshift Deployment
 
+Make sure that Kafka cluster is properly created.
+Topic required: `quotes`, `quote-requests` defined.
+
+Application expects to find Kafka bootstrap at `my-cluster-kafka-bootstrap.my-kafka.svc:9092` but it can be chaged in the `ConfigMap` definition [here](quote-processor/src/main/kubernetes/openshift.yml)
+
 Deploy the processor:
 
 ```sh
