@@ -33,7 +33,7 @@ public class TopologyProducer {
         quoteStream
                 .selectKey((k,v) -> "-")
                 .groupByKey()
-                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(6)))
+                .windowedBy(TimeWindows.ofSizeWithNoGrace(Duration.ofSeconds(30)))
                 .aggregate(
                         QuoteAggregate::new,
                         (k, price, aggregate) -> {
