@@ -1,0 +1,23 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: kafka-scaledobject
+#  namespace: my-project
+spec:
+  scaleTargetRef:
+    name: quote-processor     # Your Deployment name
+  minReplicaCount: 0          # Will scale to zero if no messages
+  maxReplicaCount: 4
+  pollingInterval: 30         # Check Kafka every 30 seconds
+  cooldownPeriod: 30          # Wait 30 secs before scaling back to zero for demo purposes usually 5 minutes
+  triggers:
+  - type: kafka
+    metadata:
+      bootstrapServers: my-cluster-kafka-bootstrap.my-kafka.svc:9092
+      topic: quote-requests
+      consumerGroup: quote-processor # Should match your app's group
+      activationLagThreshold: "0"    # Scaler wakes up at > 0 messages (starts 1st pod)
+      lagThreshold: "10"             # Scale up if lag > 10 messages per partition
+      offsetResetPolicy: latest
+#    authenticationRef:
+#      name: keda-kafka-auth
