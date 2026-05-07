@@ -58,9 +58,18 @@ The `-Dquarkus.native.container-build=true` instructs Quarkus to build Linux 64b
 ### Openshift Deployment
 
 Make sure that Kafka cluster is properly created.
-Topic required: `quotes`, `quote-requests` defined.
-
 Application expects to find Kafka bootstrap at `my-cluster-kafka-bootstrap.my-kafka.svc:9092` but it can be chaged in the `ConfigMap` definition [here](quote-processor/src/main/kubernetes/openshift.yml)
+
+If your Kafka server does not allow clients to create their own topics, create following ones:
+
+- `quote-requests`
+- `quotes`
+- `quote-aggregates`
+
+Add the following topics if you deploy also the analitics:
+
+- `quote-analytics-KSTREAM-AGGREGATE-STATE-STORE-0000000002-changelog`
+- `quote-analytics-KSTREAM-AGGREGATE-STATE-STORE-0000000002-repartition`
 
 Deploy the processor:
 
@@ -71,6 +80,11 @@ Deploy the processor:
 Deploy the producer:
 ```sh
 ./mvnw -f quote-producer package -DskipTests -Dquarkus.kubernetes.deploy=true
+```
+
+Deploy the analytics:
+```sh
+./mvnw -f quote-analytics package -DskipTests -Dquarkus.kubernetes.deploy=true
 ```
 
 Remove builder pods:
