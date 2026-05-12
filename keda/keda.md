@@ -51,9 +51,9 @@ metadata:
   namespace: my-project
 spec:
   scaleTargetRef:
-    name: my-quote-processor  # Your Deployment name
+    name: quote-processor     # Your Deployment name
   minReplicaCount: 0          # Will scale to zero if no messages
-  maxReplicaCount: 10
+  maxReplicaCount: 4
   pollingInterval: 30         # Check Kafka every 30 seconds
   cooldownPeriod: 300         # Wait 5 mins before scaling back to zero
   triggers:
@@ -61,8 +61,9 @@ spec:
     metadata:
       bootstrapServers: my-kafka-cluster-kafka-bootstrap.kafka.svc:9092
       topic: quote-requests
-      consumerGroup: quote-consumer-group # Should match your app's group
-      lagThreshold: "5"       # Scale up if lag > 5 messages per partition
+      consumerGroup: quote-processor # Should match your app's group
+      activationLagThreshold: "0"    # Scaler wakes up at > 0 messages (starts 1st pod)
+      lagThreshold: "10"             # Scale up if lag > 10 messages per partition
       offsetResetPolicy: latest
     authenticationRef:
       name: keda-kafka-auth
@@ -168,7 +169,10 @@ If your messages are coming in "bursts," KEDA might be hitting the `cooldownPeri
 
 
 
-### Summary Checklist to fix it:
+### Troubleshooting
+
+If Keda does not scale the pods as expected try the following:
+
 1.  **Lower your `lagThreshold`:** Set it to `1` or `2` just for testing to see if the second pod triggers.
 2.  **Increase Topic Partitions:** Ensure you have at least 2 or 4 partitions.
 3.  **Check Consumer Group Name:** Ensure the `consumerGroup` in your KEDA YAML exactly matches the one your application code is using. If they don't match, KEDA is looking at a different "offset" than your app.
